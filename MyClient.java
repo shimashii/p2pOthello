@@ -10,13 +10,10 @@ import java.awt.image.*;	//画像処理に必要
 import java.awt.geom.*;		//画像処理に必要
 import java.awt.Dialog.*;
 
-public class MyClient extends JFrame implements MouseListener,MouseMotionListener {
+public class MyClient extends JFrame implements MouseListener, MouseMotionListener {
 	// オセロ競技ボード作成
 	private JButton buttonArray[][];
-	// 
-	private JLabel theLabelA;
-	private JLabel theLabelB;
-	private JLabel theLabelC;
+
 	// 自分のコマの色
 	private int myColor;
 	// 自分のターンかどうか
@@ -32,6 +29,11 @@ public class MyClient extends JFrame implements MouseListener,MouseMotionListene
 	// boardIconの数を格納
 	private int fin = 60;
 
+	// 勝敗判定ダイアログ
+	WinDialogWindow dlg = new WinDialogWindow(this);
+
+
+
 	public MyClient() {
 		// 名前の入力ダイアログを開く
 		String myName = JOptionPane.showInputDialog(null,"名前を入力してください","名前の入力",JOptionPane.QUESTION_MESSAGE);
@@ -45,7 +47,7 @@ public class MyClient extends JFrame implements MouseListener,MouseMotionListene
 		this.setTitle("MyClient");								//　ウィンドウのタイトルを設定する
 		this.setSize(600,500);									//　ウィンドウのサイズを設定する
 		c = getContentPane();									//　フレームのペインを取得する
-		
+
 		//アイコンの設定
 		whiteIcon = new ImageIcon("White.jpg");
 		blackIcon = new ImageIcon("Black.jpg");
@@ -84,6 +86,68 @@ public class MyClient extends JFrame implements MouseListener,MouseMotionListene
 		MesgRecvThread mrt = new MesgRecvThread(socket, myName);	// 受信用のスレッドを作成する
 		mrt.start();												// スレッドを動かす（Runが動く）
 	}
+
+	// 勝敗のダイアログ(負けと引き分けの画像は用意できていない)
+	class WinDialogWindow extends JDialog implements ActionListener {
+		JButton theButton = new JButton();
+		ImageIcon thewinImage = new ImageIcon("win.jpg");
+		ImageIcon theloseImage = new ImageIcon("lose.jpg");
+		ImageIcon thedrawImage = new ImageIcon("draw.jpg");
+		JFrame own = new JFrame();
+		Container cc = this.getContentPane();
+		
+		WinDialogWindow(JFrame owner) {
+			super(owner);
+			own = owner;
+			cc.setLayout(null);
+		}
+
+		public void win(){
+			theButton.setIcon(thewinImage);
+			theButton.setBounds(0,0,526,234);
+			theButton.addActionListener(this);
+			cc.add(theButton);
+			setTitle("You Win!");
+			setSize(526, 234);
+			setResizable(false);
+			setUndecorated(true);
+			setModal(true);
+			setLocation(own.getBounds().x+own.getWidth()/2-this.getWidth()/2,own.getBounds().y+own.getHeight()/2-this.getHeight()/2);
+			setVisible(true);
+		}
+
+		public void lose(){
+			theButton.setIcon(theloseImage);
+			theButton.setBounds(0,0,526,234);
+			theButton.addActionListener(this);
+			cc.add(theButton);
+			setTitle("You lose..");
+			setSize(526, 234);
+			setResizable(false);
+			setUndecorated(true);
+			setModal(true);
+			setLocation(own.getBounds().x+own.getWidth()/2-this.getWidth()/2,own.getBounds().y+own.getHeight()/2-this.getHeight()/2);
+			setVisible(true);
+		}
+
+		public void draw(){
+			theButton.setIcon(thedrawImage);
+			theButton.setBounds(0,0,526,234);
+			theButton.addActionListener(this);
+			cc.add(theButton);
+			setTitle("draw");
+			setSize(526, 234);
+			setResizable(false);
+			setUndecorated(true);
+			setModal(true);
+			setLocation(own.getBounds().x+own.getWidth()/2-this.getWidth()/2,own.getBounds().y+own.getHeight()/2-this.getHeight()/2);
+			setVisible(true);
+		}
+
+		public void actionPerformed(ActionEvent e) {
+			this.dispose();
+		}
+	}
 		
 	//メッセージ受信のためのスレッド
 	public class MesgRecvThread extends Thread {
@@ -94,7 +158,7 @@ public class MyClient extends JFrame implements MouseListener,MouseMotionListene
 			socket = s;
 			myName = n;
 		}
-		
+
 		// 通信状況を監視し，受信データによって動作する
 		public void run() {
 			try{
@@ -336,11 +400,17 @@ public class MyClient extends JFrame implements MouseListener,MouseMotionListene
 		}
 
 		if (mine < yours) {
+			dlg.win();
 			text = "あなたの勝ちです.";
+		
 		} else if (mine > yours) {
+			dlg.lose();
 			text = "相手の勝ちです.";
+
 		} else {
+			dlg.draw();
 			text = "引き分けです.";
+
 		}
 		return text;
 	}
